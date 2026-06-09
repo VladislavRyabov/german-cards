@@ -1,5 +1,5 @@
 // НАСТРОЙКИ GITHUB — ОБЯЗАТЕЛЬНО ЗАПОЛНИТЕ СВОИМИ ДАННЫМИ
-const GITHUB_USERNAME = 'vladislavryabov'; 
+const GITHUB_USERNAME = 'VladislavRyabov'; 
 const GITHUB_REPO = 'german-cards'; 
 const FILE_PATH = 'index.html'; 
 
