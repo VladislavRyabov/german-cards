@@ -1,4 +1,4 @@
-// НАСТРОЙКИ GITHUB — ОБЯЗАТЕЛЬНО ЗАПОЛНИТЕ СВОИМИ ДАННЫМИ
+// НАСТРОЙКИ GITHUB — ПРОВЕРЬТЕ ИХ ВНИМАТЕЛЬНО!
 const GITHUB_USERNAME = 'vladislavryabov'; 
 const GITHUB_REPO = 'german-cards'; 
 const FILE_PATH = 'index.html'; 
@@ -151,7 +151,7 @@ function saveCard(button) {
   updateCounters();
 }
 
-// Функция удаления карточки с экрана
+// Удаление карточки
 function deleteCard(button) {
   if (confirm('Вы уверены, что хотите удалить эту фразу?')) {
     const card = button.closest('.card');
@@ -160,7 +160,7 @@ function deleteCard(button) {
   }
 }
 
-// Сохранение изменений в репозиторий GitHub через API
+// Сохранение изменений на GitHub
 async function saveToGitHub() {
   const token = localStorage.getItem(TOKEN_KEY);
   if (!token) { checkToken(); return; }
@@ -173,7 +173,6 @@ async function saveToGitHub() {
   const cardsHTML = document.getElementById('cardsGrid').innerHTML;
   const newHTMLContent = generateFullHTML(cardsHTML);
 
-  // Добавляем параметр branch=main прямо в адрес запроса, чтобы GitHub сразу понимал, куда сохранять
   const url = `https://github.com{GITHUB_USERNAME}/${GITHUB_REPO}/contents/${FILE_PATH}?ref=main`;
 
   try {
@@ -181,12 +180,11 @@ async function saveToGitHub() {
       headers: { 'Authorization': `token ${token}` }
     });
     
-    if (!responseGet.ok) throw new Error('Не удалось получить файл с GitHub. Проверьте логин, имя репозитория или токен.');
+    if (!responseGet.ok) throw new Error('Не удалось получить файл с GitHub. Проверьте настройки или токен.');
     
     const fileData = await responseGet.json();
     const sha = fileData.sha;
 
-    // Безопасный перевод строки UTF-8 в Base64 (с поддержкой кириллицы и ударений)
     const b64Content = btoa(encodeURIComponent(newHTMLContent).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
 
     const responsePut = await fetch(url, {
@@ -199,7 +197,7 @@ async function saveToGitHub() {
         message: 'Update vocabulary cards',
         content: b64Content,
         sha: sha,
-        branch: 'main' // Точно указываем ветку для записи
+        branch: 'main'
       })
     });
 
@@ -213,4 +211,3 @@ async function saveToGitHub() {
     alert(error.message);
   }
 }
-
