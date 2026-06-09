@@ -173,7 +173,8 @@ async function saveToGitHub() {
   const cardsHTML = document.getElementById('cardsGrid').innerHTML;
   const newHTMLContent = generateFullHTML(cardsHTML);
 
-  const url = `https://github.com{GITHUB_USERNAME}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+  // Добавляем параметр branch=main прямо в адрес запроса, чтобы GitHub сразу понимал, куда сохранять
+  const url = `https://github.com{GITHUB_USERNAME}/${GITHUB_REPO}/contents/${FILE_PATH}?ref=main`;
 
   try {
     const responseGet = await fetch(url, {
@@ -185,9 +186,8 @@ async function saveToGitHub() {
     const fileData = await responseGet.json();
     const sha = fileData.sha;
 
-    // Безопасный перевод строки UTF-8 в Base64 (с поддержкой кириллицы и умлаутов)
+    // Безопасный перевод строки UTF-8 в Base64 (с поддержкой кириллицы и ударений)
     const b64Content = btoa(encodeURIComponent(newHTMLContent).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
-
 
     const responsePut = await fetch(url, {
       method: 'PUT',
@@ -198,7 +198,8 @@ async function saveToGitHub() {
       body: JSON.stringify({
         message: 'Update vocabulary cards',
         content: b64Content,
-        sha: sha
+        sha: sha,
+        branch: 'main' // Точно указываем ветку для записи
       })
     });
 
@@ -212,3 +213,4 @@ async function saveToGitHub() {
     alert(error.message);
   }
 }
+
