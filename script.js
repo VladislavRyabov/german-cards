@@ -185,8 +185,9 @@ async function saveToGitHub() {
     const fileData = await responseGet.json();
     const sha = fileData.sha;
 
-    // Безопасный перевод строки UTF-8 в Base64
-    const b64Content = btoa(unescape(encodeURIComponent(newHTMLContent)));
+    // Безопасный перевод строки UTF-8 в Base64 (с поддержкой кириллицы и умлаутов)
+    const b64Content = btoa(encodeURIComponent(newHTMLContent).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
+
 
     const responsePut = await fetch(url, {
       method: 'PUT',
