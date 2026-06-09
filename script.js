@@ -1,25 +1,6 @@
-// НАСТРОЙКИ GITHUB — ПРОВЕРЬТЕ ИХ ВНИМАТЕЛЬНО!
-const GITHUB_USERNAME = 'vladislavryabov'; 
-const GITHUB_REPO = 'german-cards'; 
-const FILE_PATH = 'index.html'; 
-
-const TOKEN_KEY = 'gh_token_cards';
-
 document.addEventListener('DOMContentLoaded', () => {
   updateCounters();
-  checkToken();
 });
-
-// Проверка токена
-function checkToken() {
-  let token = localStorage.getItem(TOKEN_KEY);
-  if (!token) {
-    token = prompt('Пожалуйста, введите ваш GitHub Personal Access Token (repo):');
-    if (token) {
-      localStorage.setItem(TOKEN_KEY, token.trim());
-    }
-  }
-}
 
 // Подсчет статистики
 function updateCounters() {
@@ -40,7 +21,7 @@ function updateCounters() {
   document.getElementById('totalWords').innerText = totalWordsCount;
 }
 
-// Генерация чистого HTML для отправки в репозиторий
+// Генерация чистого HTML для сохранения
 function generateFullHTML(cardsHTML) {
   return `<!DOCTYPE html>
 <html lang="ru">
@@ -71,14 +52,14 @@ function generateFullHTML(cardsHTML) {
     <button onclick="addCard()">Добавить карточку</button>
   </div>
   <div style="text-align: center; margin-bottom: 30px;">
-    <button onclick="saveToGitHub()" style="background-color: #007bff; width: auto; padding: 10px 20px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
-      ☁️ Сохранить изменения на GitHub
+    <button onclick="saveProject()" style="background-color: #28a745; width: auto; padding: 12px 24px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">
+      💾 СКАЧАТЬ ОБНОВЛЕННЫЙ ФАЙЛ INDEX.HTML
     </button>
   </div>
   <div class="cards-grid" id="cardsGrid">
     ${cardsHTML}
   </div>
-  <script src="script.js"></script>
+  <script src="${window.location.pathname.includes('app.js') ? 'app.js' : 'script.js'}"></script>
 </body>
 </html>`;
 }
@@ -160,54 +141,20 @@ function deleteCard(button) {
   }
 }
 
-// Сохранение изменений на GitHub
-async function saveToGitHub() {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) { checkToken(); return; }
-
+// Локальное сохранение файла на ПК/Телефон
+function saveProject() {
   if (document.querySelectorAll('.edit-input').length > 0) {
-    alert('Пожалуйста, сохраните все карточки перед отправкой в облако!');
+    alert('Пожалуйста, сохраните все редактируемые карточки перед скачиванием файла!');
     return;
   }
 
   const cardsHTML = document.getElementById('cardsGrid').innerHTML;
   const newHTMLContent = generateFullHTML(cardsHTML);
 
-  const url = `https://github.com{GITHUB_USERNAME}/${GITHUB_REPO}/contents/${FILE_PATH}?ref=main`;
-
-  try {
-    const responseGet = await fetch(url, {
-      headers: { 'Authorization': `token ${token}` }
-    });
-    
-    if (!responseGet.ok) throw new Error('Не удалось получить файл с GitHub. Проверьте настройки или токен.');
-    
-    const fileData = await responseGet.json();
-    const sha = fileData.sha;
-
-    const b64Content = btoa(encodeURIComponent(newHTMLContent).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
-
-    const responsePut = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: 'Update vocabulary cards',
-        content: b64Content,
-        sha: sha,
-        branch: 'main'
-      })
-    });
-
-    if (responsePut.ok) {
-      alert('🎉 Карточки успешно сохранены на GitHub навсегда!');
-    } else {
-      const errorData = await responsePut.json();
-      alert('Ошибка при сохранении: ' + errorData.message);
-    }
-  } catch (error) {
-    alert(error.message);
-  }
+  const blob = new Blob([newHTMLContent], { type: 'text/html' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'index.html'; 
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
